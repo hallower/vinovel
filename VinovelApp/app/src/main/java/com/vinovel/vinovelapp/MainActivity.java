@@ -64,9 +64,10 @@ public class MainActivity extends Activity {
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        webview.getSettings().setAppCachePath(dir.getPath());
-        webview.getSettings().setAllowFileAccess(true);
-        webview.getSettings().setAppCacheEnabled(true);
+        settings.setAppCachePath(dir.getPath());
+        settings.setAllowFileAccess(true);
+        settings.setAppCacheEnabled(true);
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         StringBuilder userAgent = new StringBuilder(settings.getUserAgentString());
         userAgent.append(";" + VNV_UA_STRING);
@@ -91,7 +92,7 @@ public class MainActivity extends Activity {
         pref.edit().putString(ID_LAST_URL, currentURL).commit();
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            webview.evaluateJavascript("X.episode_view.overlayOff();", null);
+            webview.evaluateJavascript("evaluateJavascript:X.episode_view.overlayOff();", null);
         }else{
             if(currentURL.contains("episode")){
                 if (webview.canGoBack()) {
