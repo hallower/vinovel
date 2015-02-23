@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -20,25 +21,27 @@ import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 
 public class MainActivity extends Activity {
 
-    private static String LOG_TAG = "vnv";
-    private static String DEFAULT_PAGE_URL = "http://www.vinovel.com/";
-    private static String ID_LAST_URL = "VNV_LAST_URL";
+    private static final String LOG_TAG = "vnv";
+    private static final String DEFAULT_PAGE_URL = "http://www.vinovel.com/";
+    private static final String ID_LAST_URL = "VNV_LAST_URL";
+    private static final String VNV_UA_STRING = "VinovelApp/0.1";
 
     private WebView webview;
     private LinearLayout llSplash;
 
-    private Handler handler;
+    private final Handler handler = new Handler();
     private Runnable runnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         llSplash = (LinearLayout)findViewById(R.id.splash_logo);
         webview = (WebView) findViewById(R.id.fullscreen_content);
@@ -49,13 +52,26 @@ public class MainActivity extends Activity {
                 llSplash.setVisibility(View.GONE);
             }
         };
-        handler = new Handler();
         handler.postDelayed(runnable, 8000);
 
         WebSettings settings = webview.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
+
+        webview.getSettings().setAppCacheMaxSize(1024 * 1024 * 8);
+        File dir = getCacheDir();
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        webview.getSettings().setAppCachePath(dir.getPath());
+        webview.getSettings().setAllowFileAccess(true);
+        webview.getSettings().setAppCacheEnabled(true);
+
+        StringBuilder userAgent = new StringBuilder(settings.getUserAgentString());
+        userAgent.append(";" + VNV_UA_STRING);
+        settings.setUserAgentString(userAgent.toString());
+
         webview.setWebViewClient(new WebViewClientClass());
         webview.addJavascriptInterface(new WebAppInterface(this), "vnv_js_api");
 
@@ -74,26 +90,18 @@ public class MainActivity extends Activity {
         SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
         pref.edit().putString(ID_LAST_URL, currentURL).commit();
 
-        if(currentURL.contains("episode")){
-            if (webview.canGoBack()) {
-                webview.goBack();
-            }else{
-                webview.loadUrl(DEFAULT_PAGE_URL);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            webview.evaluateJavascript("X.episode_view.overlayOff();", null);
+        }else{
+            if(currentURL.contains("episode")){
+                if (webview.canGoBack()) {
+                    webview.goBack();
+                }else{
+                    webview.loadUrl(DEFAULT_PAGE_URL);
+                }
             }
         }
         webview.onPause();
-
-        // TODO : method 1, change to blank page to mute every thing
-        //webview.loadUrl("about:blank");
-
-        // TODO : method 2, change system volume to mute.
-        /*
-        AudioManager audioManager;
-        audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
-        */
-
-        // TODO : method 3, call javascript
     }
 
     @Override
