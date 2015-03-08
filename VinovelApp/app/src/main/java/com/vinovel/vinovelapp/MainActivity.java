@@ -1,28 +1,27 @@
 package com.vinovel.vinovelapp;
 
-import com.vinovel.vinovelapp.util.SystemUiHider;
-
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.webkit.JavascriptInterface;
-import android.webkit.WebChromeClient;
+import android.webkit.URLUtil;
 import android.webkit.WebSettings;
-import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 
 public class MainActivity extends Activity {
 
@@ -59,7 +58,7 @@ public class MainActivity extends Activity {
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
 
-        webview.getSettings().setAppCacheMaxSize(1024 * 1024 * 8);
+        settings.setAppCacheMaxSize(1024 * 1024 * 8);
         File dir = getCacheDir();
         if (!dir.exists()) {
             dir.mkdirs();
@@ -67,7 +66,7 @@ public class MainActivity extends Activity {
         settings.setAppCachePath(dir.getPath());
         settings.setAllowFileAccess(true);
         settings.setAppCacheEnabled(true);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        //settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         StringBuilder userAgent = new StringBuilder(settings.getUserAgentString());
         userAgent.append(";" + VNV_UA_STRING);
@@ -163,6 +162,54 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void setLandscapeLayout() {
             setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        }
+
+        @JavascriptInterface
+        public void openWebBrowser(String url){
+            if(!URLUtil.isValidUrl(url)){
+                return;
+            }
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setData(Uri.parse(url));
+            startActivity(i);
+        }
+
+        @JavascriptInterface
+        public void vibrate(String csvPatterns){
+            if(csvPatterns.isEmpty()){
+                return;
+            }
+            //String csvPatterns = "100,300,200,400,500,30,10";
+            ArrayList<Long> patterns = new ArrayList<Long>();
+
+            try{
+                int start = 0;
+                int end = csvPatterns.indexOf(",");
+
+                while(-1 != end){
+                    Long tmpValue = Long.valueOf(csvPatterns.substring(start, end));
+                    Log.i(LOG_TAG, "value = " + tmpValue);
+                    patterns.add(tmpValue);
+                    start = end + 1;
+                    end = csvPatterns.indexOf(",", start);
+                }
+
+                if(start < csvPatterns.length()){
+                    Long tmpValue = Long.valueOf(csvPatterns.substring(start, csvPatterns.length()));
+                    patterns.add(tmpValue);
+                }
+
+            }catch (Exception e){
+                return;
+            }
+
+            Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+            long[] long_patterns = new long[patterns.size()];
+            for(int i = 0; i < patterns.size(); i++){
+                long_patterns[i] = patterns.get(i);
+            }
+            v.vibrate(long_patterns, -1);
         }
     }
 }
