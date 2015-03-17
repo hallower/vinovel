@@ -1,4 +1,4 @@
-package com.vinovel.vinovelapp;
+package com.tubloo.tublooapp;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

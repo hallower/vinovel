@@ -1,4 +1,4 @@
-package com.vinovel.vinovelapp;
+package com.tubloo.tublooapp;
 
 import android.app.Activity;
 import android.content.Context;
@@ -20,15 +20,16 @@ import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+
 import java.io.File;
 import java.util.ArrayList;
 
 public class MainActivity extends Activity {
 
-    private static final String LOG_TAG = "vnv";
-    private static final String DEFAULT_PAGE_URL = "http://www.vinovel.com/";
-    private static final String ID_LAST_URL = "VNV_LAST_URL";
-    private static final String VNV_UA_STRING = "VinovelApp/0.1";
+    private static final String LOG_TAG = "tbl";
+    private static final String DEFAULT_PAGE_URL = "http://www.tubloo.com/";
+    private static final String ID_LAST_URL = "TBL_LAST_URL";
+    private static final String TBL_UA_STRING = "TublooApp/0.1";
 
     private WebView webview;
     private LinearLayout llSplash;
@@ -69,7 +70,7 @@ public class MainActivity extends Activity {
         //settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         StringBuilder userAgent = new StringBuilder(settings.getUserAgentString());
-        userAgent.append(";" + VNV_UA_STRING);
+        userAgent.append(";" + TBL_UA_STRING);
         settings.setUserAgentString(userAgent.toString());
 
         webview.setWebViewClient(new WebViewClientClass());
@@ -166,7 +167,9 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void openWebBrowser(String url){
+            Log.i(LOG_TAG, "openWebBrowser, url = " + url);
             if(!URLUtil.isValidUrl(url)){
+                Log.e(LOG_TAG, "invalid url = " + url);
                 return;
             }
             Intent i = new Intent(Intent.ACTION_VIEW);
@@ -176,7 +179,9 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void vibrate(String csvPatterns){
+            Log.i(LOG_TAG, "vibrate, pattern = " + csvPatterns);
             if(csvPatterns.isEmpty()){
+                Log.e(LOG_TAG, "invalid csv string = " + csvPatterns);
                 return;
             }
             //String csvPatterns = "100,300,200,400,500,30,10";
