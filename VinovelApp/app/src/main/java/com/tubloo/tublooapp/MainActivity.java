@@ -76,6 +76,10 @@ public class MainActivity extends Activity {
         webview.setWebViewClient(new WebViewClientClass());
         webview.addJavascriptInterface(new WebAppInterface(this), "vnv_js_api");
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            webview.setWebContentsDebuggingEnabled(true);
+        }
+
         SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
         String lastURL = pref.getString(ID_LAST_URL, DEFAULT_PAGE_URL);
         Log.i(LOG_TAG, "start url = " + lastURL);
@@ -148,6 +152,19 @@ public class MainActivity extends Activity {
 
         WebAppInterface(Context c) {
             mContext = c;
+        }
+
+        @JavascriptInterface
+        public void changeBaseURL(String base_url) {
+            Log.i(LOG_TAG, "changeBaseURL, url = " + base_url);
+            if(!URLUtil.isValidUrl(base_url)){
+                Log.e(LOG_TAG, "changeBaseURL is failed => invalid url = " + base_url);
+                return;
+            }
+            Toast.makeText(mContext, "BaseURL will be changed with " + base_url, Toast.LENGTH_SHORT).show();
+            //DEFAULT_PAGE_URL = base_url;
+            // TODO : make a handler functio to manage webview.
+            //webview.loadUrl(DEFAULT_PAGE_URL);
         }
 
         @JavascriptInterface
